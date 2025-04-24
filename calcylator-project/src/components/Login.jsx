@@ -4,21 +4,35 @@ export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [movies, setMovies] = useState([]);
+  const [error, setError] = useState(null);
 
   const handleLogin = async () => {
-    const res = await fetch('https://tokenservice-jwt-2025.vercel.app/token-service/v1/request-token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-    const data = await res.json();
-    const token = data.token;
+    try {
+      setError(null);
+      const res = await fetch('/token-service/v1/request-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Inloggning misslyckades: ${errorText}`);
+      }
+      const token = await res.text(); // Hämta svaret som en sträng (inte JSON)
 
-    const movieRes = await fetch('https://tokenservice-jwt-2025.vercel.app/movies', {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const moviesData = await movieRes.json();
-    setMovies(moviesData);
+      const movieRes = await fetch('/movies', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!movieRes.ok) {
+        const errorText = await movieRes.text();
+        throw new Error(`Kunde inte hämta filmer: ${errorText}`);
+      }
+      const moviesData = await movieRes.json(); // /movies returnerar JSON
+      setMovies(moviesData);
+    } catch (error) {
+      console.error('Fel:', error.message);
+      setError(error.message);
+    }
   };
 
   return (
@@ -36,7 +50,7 @@ export default function Login() {
         onChange={(e) => setPassword(e.target.value)}
       />
       <button onClick={handleLogin}>Logga in och hämta filmer</button>
-
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       <ul>
         {movies.map((m) => (
           <li key={m.id}>{m.title}</li>

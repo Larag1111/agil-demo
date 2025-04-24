@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
+import { it, expect, beforeAll, afterEach, afterAll } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { server } from './mocks/server';
 import Login from '../src/components/Login';
